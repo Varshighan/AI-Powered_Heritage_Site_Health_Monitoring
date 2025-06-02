@@ -306,7 +306,7 @@ if uploaded_video:
                 st.image(depth_heatmap,caption="Depth Estimation",use_container_width=True)
             with col2:
                 st.image(segment_image,caption="Segmentaion",use_container_width=True)
-                st.image(edges,caption="Edges",use_container_width=true)
+                st.image(edges,caption="Edges",use_container_width=True)
             st.markdown("---")
         frame_idx += 1
     cap.release()
