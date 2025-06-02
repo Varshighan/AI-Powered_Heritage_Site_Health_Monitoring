@@ -163,6 +163,7 @@ import cv2
 import numpy as np
 from PIL import Image
 import time
+import tempfile
 from ultralytics import YOLO
 
 st.set_page_config(page_title="Heritage Sites Health Monitoring", layout="wide")
@@ -273,6 +274,42 @@ if uploaded_files:
             st.image(edges, caption="Canny Edge Detection", use_container_width=True)
         
         st.markdown("---")
+
+if uploaded_video:
+    tfile = tempfile.NamedTemporaryFile(delete = False)
+    tfile.write(uploaded_video.read())
+    cap = cv2.VideoCapture(tfile.name)
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_interval = int(fps)
+    frame_idx = 0
+    frame_number = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read() 
+        if not ret:
+            break
+        if frame_idx % frame_interval == 0:
+            frame_number += 1
+            st.subhead(f"Frame {frame_number}")
+
+            image_np = frame
+            processed_image = detect_with_yolo(image_np)
+            segmented_image = segment_image(image_np)
+            equalized_image = preprocess_image_for_depth_estimation(image_np)
+            depth_heatmap = create_depth_estimation_heatmap(equalized_image)
+            edges = apply_canny_edge_detection(image_np)
+
+            col1,col2 = st.columns(2)
+            with col1:
+                st.image(processed_image, caption="Detection",use_container_width = True)
+                st.image(depth_heatmap,caption="Depth Estimation",use_container_width=True)
+            with col2:
+                st.image(segment_image,caption="Segmentaion",use_container_width=True)
+                st.image(edges,caption="Edges",use_container_width=true)
+            st.markdown("---")
+        frame_idx += 1
+    cap.release()
 
 st.markdown(
     '<div class="footer">© 2024 Heritage Health Monitoring <i class="fas fa-globe"></i></div>',
