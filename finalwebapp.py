@@ -153,10 +153,6 @@
 
 
 
-
-
-
-
 import streamlit as st
 import torch
 import cv2
@@ -178,6 +174,8 @@ st.sidebar.header("Options")
 
 model_choice = st.sidebar.selectbox("Select a model for object detection:", ("YOLO",))
 
+
+
 uploaded_files = st.sidebar.file_uploader(
     "Choose images...", type=["jpg", "png", "jpeg"], accept_multiple_files=True
 )
@@ -185,6 +183,10 @@ uploaded_files = st.sidebar.file_uploader(
 uploaded_video = st.sidebar.file_uploader("Upload a video...",type=["mp4","avi","mov"])
 
 px_to_cm_ratio = 0.1
+
+
+
+
 
 def preprocess_image_for_depth_estimation(image_np):
     gray_image = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
@@ -247,6 +249,10 @@ def segment_image(image_np):
     segmented_image = results[0].plot()
     return segmented_image
 
+
+
+
+
 if uploaded_files:
     for uploaded_file in uploaded_files:
         image = Image.open(uploaded_file)
@@ -291,7 +297,7 @@ if uploaded_video:
             break
         if frame_idx % frame_interval == 0:
             frame_number += 1
-            st.subhead(f"Frame {frame_number}")
+            st.subheader(f"Frame {frame_number}")
 
             image_np = frame
             processed_image = detect_with_yolo(image_np)
@@ -305,13 +311,50 @@ if uploaded_video:
                 st.image(processed_image, caption="Detection",use_container_width = True)
                 st.image(depth_heatmap,caption="Depth Estimation",use_container_width=True)
             with col2:
-                st.image(segment_image,caption="Segmentaion",use_container_width=True)
+                st.image(segmented_image,caption="Segmentation",use_container_width=True)
                 st.image(edges,caption="Edges",use_container_width=True)
             st.markdown("---")
         frame_idx += 1
     cap.release()
 
+if st.sidebar.button("Start Webcam"):
+    stframe1, stframe2 = st.columns(2)
+    run = st.sidebar.checkbox("Stop Webcam")
+
+    cap = cv2.VideoCapture(0)
+    frame_number = 0
+
+    while cap.isOpened() and not run:
+        ret, frame = cap.read()
+        if not ret:
+            st.warning("Failed to capture frame from camera.")
+            break
+
+        frame_number += 1
+        image_np = frame.copy()
+
+        # Process Frame
+        processed_image = detect_with_yolo(image_np)
+        segmented_image = segment_image(image_np)
+        equalized_image = preprocess_image_for_depth_estimation(image_np)
+        depth_heatmap = create_depth_estimation_heatmap(equalized_image)
+        edges = apply_canny_edge_detection(image_np)
+
+        # Display
+        with stframe1:
+            st.image(processed_image, caption=f"Detection - Frame {frame_number}", use_container_width=True)
+            st.image(depth_heatmap, caption="Depth Estimation", use_container_width=True)
+        with stframe2:
+            st.image(segmented_image, caption="Segmentation", use_container_width=True)
+            st.image(edges, caption="Edges", use_container_width=True)
+
+        # Add slight delay to make viewing smoother
+        time.sleep(0.1)
+
+    cap.release()
+
+
 st.markdown(
-    '<div class="footer">© 2024 Heritage Health Monitoring <i class="fas fa-globe"></i></div>',
+    '<div class="footer">© 2025 Heritage Health Monitoring <i class="fas fa-globe"></i></div>',
     unsafe_allow_html=True,
 )
