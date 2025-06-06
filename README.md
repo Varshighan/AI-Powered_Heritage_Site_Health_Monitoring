@@ -36,12 +36,12 @@ This solution uses **YOLO-based segmentation** models and **Canny edge detection
 
 1. Open the terminal inside the `demo` folder
 2. Run the following command:
-   to run in streamlit
-
+   
+  to run in streamlit
 ```bash
 streamlit run finalwebapp.py 
 ```
-   to run a realtime opencv interface 
+  to run a realtime opencv interface 
 ```bash
 python camera_capture.py 
 ```
